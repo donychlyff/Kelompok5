@@ -1,0 +1,1439 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Booking Tiket Kapal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/_sdk/element_sdk.js"></script>
+    <script src="/_sdk/data_sdk.js"></script>
+    <style>
+        /* PENTING: Mengaktifkan mode gelap di Tailwind */
+        :root {
+            color-scheme: light;
+        }
+        body.dark {
+            color-scheme: dark;
+        }
+
+        /* --- SKEMA WARNA DARK MODE YANG DIPERBAIKI --- */
+
+        /* Tampilan Dasar untuk Mode Terang */
+        body {
+            box-sizing: border-box;
+            background-color: #f8fafc;
+        }
+        #app-root {
+            background: linear-gradient(to bottom right, #0ea5e9, #1d4ed8);
+        }
+        /* Definisikan warna teks dan kontainer light mode secara eksplisit di sini untuk transisi yang mulus */
+        .text-primary { color: #0ea5e9; }
+        .bg-primary-light { background-color: #e0f2fe; }
+
+        /* Overrides untuk Mode Gelap (Kontras Lebih Baik) */
+        body.dark {
+            background-color: #1a1a2e; /* Deep Navy/Ungu Tua sebagai latar belakang dasar */
+        }
+        body.dark #app-root {
+            background: #1a1a2e;
+        }
+        body.dark header {
+            background-color: #252540; /* Darker Navy header background */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
+        }
+        body.dark .text-[#0f172a] { color: #f0f0f0; } /* Teks utama menjadi putih */
+        body.dark .text-[#64748b] { color: #bdbdbd; } /* Teks detail menjadi abu terang */
+        body.dark .bg-white { background-color: #252540; } /* Kontainer utama menjadi gelap */
+        body.dark .border-2, body.dark .border, body.dark .border-[#e2e8f0], body.dark .border-[#cbd5e1] { border-color: #4b5563; } /* Border gelap */
+        
+        body.dark .route-card:hover { background: #33334c; } /* Hover sedikit lebih gelap */
+        body.dark .route-card.selected { background: #33334c; border-color: #60a5fa; }
+        
+        body.dark .bg-[#f8fafc], body.dark .bg-[#e0f2fe] { background-color: #33334c; } /* Background section */
+        
+        /* Input fields in Dark Mode */
+        body.dark input, body.dark select { 
+            background-color: #33334c; 
+            border-color: #4b5563; 
+            color: #f0f0f0;
+        }
+        body.dark .bg-[#fef3c7] { 
+            background-color: #4b5563; 
+            border-color: #fbbf24; 
+        }
+        body.dark .text-[#92400e] { color: #f0f0f0; } /* Teks notifikasi kuning */
+        
+        button[disabled] {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+    </style>
+    <style>@view-transition { navigation: auto; }</style>
+</head>
+<body class="h-full">
+    <div id="app-root" class="h-full w-full overflow-auto">
+        <header class="w-full bg-white/95 backdrop-blur-sm shadow-lg sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0ea5e9] to-[#1d4ed8] flex items-center justify-center text-white text-2xl shadow-lg">
+                            ⛴
+                        </div>
+                        <div>
+                            <h1 id="app-title" class="text-xl font-bold text-[#0f172a]">Booking Tiket Kapal</h1>
+                            <p class="text-xs text-[#64748b]">Sistem booking tiket kapal</p>
+                        </div>
+                    </div>
+                    <nav class="flex items-center gap-2">
+                        <button id="theme-toggle-btn" class="nav-btn px-3 py-2 bg-white text-[#0ea5e9] border-2 border-[#0ea5e9] rounded-xl text-sm font-semibold hover:bg-[#f0f9ff] transition-colors">
+                            ☀️ Mode Terang
+                        </button>
+                        <button id="nav-home-btn" class="nav-btn px-4 py-2 bg-[#0ea5e9] text-white rounded-xl text-sm font-semibold hover:bg-[#0284c7] transition-colors"> 🏠 Beranda </button>
+                        <button id="nav-promo-btn" class="nav-btn px-4 py-2 bg-white text-[#0ea5e9] border-2 border-[#0ea5e9] rounded-xl text-sm font-semibold hover:bg-[#f0f9ff] transition-colors"> 🎁 Promosi </button>
+                        <button id="nav-account-btn" class="nav-btn px-4 py-2 bg-white text-[#0ea5e9] border-2 border-[#0ea5e9] rounded-xl text-sm font-semibold hover:bg-[#f0f9ff] transition-colors"> 👤 Akun </button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <main class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+            <div id="promo-view" class="hidden">
+                <div class="bg-white rounded-3xl shadow-2xl p-6 lg:p-10">
+                    <h3 class="text-3xl font-bold text-[#0f172a] mb-2">🎁 Promosi &amp; Penawaran Spesial</h3>
+                    <p class="text-sm text-[#64748b] mb-8">Dapatkan harga terbaik untuk perjalanan Anda</p>
+
+                    <div class="bg-gradient-to-br from-[#fbbf24] to-[#f59e0b] rounded-3xl p-8 mb-8 text-white relative overflow-hidden">
+                        <div class="absolute top-0 right-0 text-[200px] opacity-10">
+                            🎁
+                        </div>
+                        <div class="relative z-10">
+                            <span class="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold mb-3">PROMO SPESIAL</span>
+                            <h4 class="text-3xl font-bold mb-2">Diskon 30% untuk Grup!</h4>
+                            <p class="text-lg mb-4 text-white/90">Pesan minimal 5 tiket sekaligus dan dapatkan potongan harga hingga 30%</p>
+                            <div class="flex items-center gap-4">
+                                <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl">
+                                    <p class="text-xs">Berlaku hingga</p>
+                                    <p class="font-bold">31 Desember 2024</p>
+                                </div>
+                                <button type="button" class="bg-white text-[#f59e0b] px-6 py-2 rounded-xl font-semibold hover:bg-white/90 transition-colors"> Gunakan Promo </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-gradient-to-br from-[#f0f9ff] to-[#e0f2fe] border-2 border-[#0ea5e9] rounded-2xl p-6 hover:shadow-xl transition-all">
+                            <div class="text-4xl mb-3">
+                                🌅
+                            </div>
+                            <h5 class="text-lg font-bold text-[#0f172a] mb-2">Early Bird Special</h5>
+                            <p class="text-sm text-[#64748b] mb-4">Diskon 15% untuk pemesanan keberangkatan pagi (06:00 - 09:00)</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-2xl font-bold text-[#0ea5e9]">15%</span>
+                                <span class="text-xs bg-[#0ea5e9] text-white px-3 py-1 rounded-full">Aktif</span>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-[#fef3c7] to-[#fde68a] border-2 border-[#f59e0b] rounded-2xl p-6 hover:shadow-xl transition-all">
+                            <div class="text-4xl mb-3">
+                                <img width="48" height="48" src="https://img.icons8.com/fluency/48/secured-letter.png" alt="secured-letter"/>
+                            </div>
+                            <h5 class="text-lg font-bold text-[#0f172a] mb-2">Paket Pulang Pergi</h5>
+                            <p class="text-sm text-[#64748b] mb-4">Hemat 20% dengan membeli tiket pulang-pergi sekaligus</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-2xl font-bold text-[#f59e0b]">20%</span>
+                                <span class="text-xs bg-[#f59e0b] text-white px-3 py-1 rounded-full">Populer</span>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-[#fce7f3] to-[#fbcfe8] border-2 border-[#ec4899] rounded-2xl p-6 hover:shadow-xl transition-all">
+                            <div class="text-4xl mb-3">
+                                👨‍👩‍👧‍👦
+                            </div>
+                            <h5 class="text-lg font-bold text-[#0f172a] mb-2">Promo Keluarga</h5>
+                            <p class="text-sm text-[#64748b] mb-4">Gratis 1 tiket anak untuk setiap 2 tiket dewasa</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-2xl font-bold text-[#ec4899]">1+2</span>
+                                <span class="text-xs bg-[#ec4899] text-white px-3 py-1 rounded-full">Terbatas</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#f8fafc] rounded-2xl p-6 border border-[#e2e8f0]">
+                        <h5 class="text-lg font-semibold text-[#0f172a] mb-4 flex items-center gap-2">
+                            <span>ℹ</span> Syarat &amp; Ketentuan
+                        </h5>
+                        <ul class="space-y-2 text-sm text-[#64748b]">
+                            <li class="flex items-start gap-2"><span class="text-[#0ea5e9] mt-1">✓</span> <span>Promo tidak dapat digabungkan dengan promo lainnya</span></li>
+                            <li class="flex items-start gap-2"><span class="text-[#0ea5e9] mt-1">✓</span> <span>Berlaku untuk semua rute kecuali disebutkan lain</span></li>
+                            <li class="flex items-start gap-2"><span class="text-[#0ea5e9] mt-1">✓</span> <span>Pemesanan minimal 3 hari sebelum keberangkatan</span></li>
+                            <li class="flex items-start gap-2"><span class="text-[#0ea5e9] mt-1">✓</span> <span>Harga sudah termasuk asuransi perjalanan</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="account-view" class="hidden">
+                <div class="bg-white rounded-3xl shadow-2xl p-6 lg:p-10">
+                    <h3 class="text-3xl font-bold text-[#0f172a] mb-2">👤 Profil Pemesan</h3>
+                    <p class="text-sm text-[#64748b] mb-8">Kelola informasi pribadi dan riwayat perjalanan Anda</p>
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="md:col-span-1">
+                            <div class="bg-gradient-to-br from-[#0ea5e9] to-[#1d4ed8] rounded-2xl p-6 text-white text-center mb-4">
+                                <div class="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+                                    👤
+                                </div>
+                                <h4 id="profile-name" class="text-xl font-bold mb-1">-</h4>
+                                <p class="text-sm text-white/80">Member Setia</p>
+                            </div>
+                            <div class="bg-[#f8fafc] rounded-2xl p-4 border border-[#e2e8f0]">
+                                <h5 class="text-xs font-semibold text-[#64748b] mb-3">STATISTIK</h5>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-[#64748b]">Total Perjalanan</span>
+                                        <span class="text-lg font-bold text-[#0ea5e9]" id="account-total-bookings">0</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-[#64748b]">Poin Loyalitas</span>
+                                        <span class="text-lg font-bold text-[#f59e0b]" id="loyalty-points">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-[#f8fafc] rounded-2xl p-6 border border-[#e2e8f0] mt-4">
+                                <h5 class="text-sm font-semibold text-[#64748b] mb-3">RUTE FAVORIT</h5>
+                                <div id="favorite-routes" class="space-y-2 text-sm text-[#64748b]">
+                                    <p>Belum ada rute favorit. Lakukan pemesanan untuk melihat rute yang sering Anda gunakan.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2 space-y-4">
+                            <div class="bg-[#f8fafc] rounded-2xl p-6 border border-[#e2e8f0]">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h5 class="text-sm font-semibold text-[#64748b]">INFORMASI KONTAK</h5>
+                                    <button type="button" id="edit-profile-btn" class="text-xs text-[#0ea5e9] hover:text-[#0284c7] font-semibold"> ✏ Edit </button>
+                                </div>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-[#64748b] w-24">Nama:</span>
+                                        <span class="font-semibold text-[#0f172a]" id="profile-name-detail">Belum ada data</span>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-[#64748b] w-24">Email:</span>
+                                        <span class="font-semibold text-[#0f172a]" id="profile-email">Belum ada data</span>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-[#64748b] w-24">Telepon:</span>
+                                        <span class="font-semibold text-[#0f172a]" id="profile-phone">Belum ada data</span
+                                    ></div>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-[#fef3c7] to-[#fde68a] rounded-2xl p-6 border-2 border-[#f59e0b]">
+                                <div class="flex items-start gap-4">
+                                    <div class="text-4xl">
+                                        🏆
+                                    </div>
+                                    <div class="flex-1">
+                                        <h5 class="text-lg font-bold text-[#0f172a] mb-2">Program Loyalitas</h5>
+                                        <p class="text-sm text-[#64748b] mb-3">Kumpulkan poin setiap pemesanan dan tukar dengan diskon menarik!</p>
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex-1 bg-white/50 rounded-full h-2">
+                                                <div id="loyalty-progress" class="bg-[#f59e0b] h-2 rounded-full transition-all" style="width: 0%"></div>
+                                            </div>
+                                            <span class="text-xs font-semibold text-[#0f172a]" id="loyalty-progress-text">0/100</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-3xl shadow-lg p-6">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div>
+                                        <h3 class="text-2xl font-bold text-[#0f172a] mb-1">📋 Riwayat Pemesanan</h3>
+                                        <p class="text-sm text-[#64748b]">Semua pemesanan Anda</p>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-[#0ea5e9] to-[#1d4ed8] text-white px-4 py-2 rounded-xl">
+                                        <p id="total-bookings-label" class="text-xs">Total Booking</p>
+                                        <p id="total-bookings" class="text-2xl font-bold">0</p>
+                                    </div>
+                                </div>
+                                <div id="history-empty" class="text-center py-8">
+                                    <div class="text-5xl mb-4">📭</div>
+                                    <p class="text-lg font-semibold text-[#0f172a] mb-2">Belum Ada Pemesanan</p>
+                                    <button id="goto-booking-btn-account" type="button" class="bg-[#0ea5e9] hover:bg-[#0284c7] text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors"> Pesan Tiket Sekarang </button>
+                                </div>
+                                <div id="history-list" class="hidden space-y-4">
+                                    </div>
+                            </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="relative bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20 overflow-hidden" style="min-height: 300px;">
+                <div class="absolute inset-0 z-0">
+                    <svg class="w-full h-full" viewbox="0 0 1200 300" preserveaspectratio="xMidYMid slice"><defs><linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:0.4" />
+                            <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:0.6" />
+                        </linearGradient>
+                        <linearGradient id="oceanGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#0284c7;stop-opacity:0.5" />
+                            <stop offset="100%" style="stop-color:#0369a1;stop-opacity:0.7" />
+                        </linearGradient> <animatetransform id="shipMove" attributename="transform" type="translate" from="1200 0" to="-400 0" dur="25s" repeatcount="indefinite" />
+                        <animatetransform id="shipRock" attributename="transform" type="rotate" values="0 600 180; -1.5 600 180; 0 600 180; 1.5 600 180; 0 600 180" dur="4s" repeatcount="indefinite" />
+                    </defs> <rect width="1200" height="300" fill="url(#skyGradient)" /> <circle cx="150" cy="60" r="30" fill="#fbbf24" opacity="0.6">
+                        <animate attributename="opacity" values="0.6;0.8;0.6" dur="3s" repeatcount="indefinite" />
+                    </circle> <g opacity="0.3">
+                        <line x1="150" y1="20" x2="150" y2="0" stroke="#fbbf24" stroke-width="2" />
+                        <line x1="190" y1="35" x2="205" y2="25" stroke="#fbbf24" stroke-width="2" />
+                        <line x1="205" y1="60" x2="225" y2="60" stroke="#fbbf24" stroke-width="2" />
+                        <line x1="190" y1="85" x2="205" y2="95" stroke="#fbbf24" stroke-width="2" />
+                        <line x1="110" y1="35" x2="95" y2="25" stroke="#fbbf24" stroke-width="2" />
+                        <line x1="95" y1="60" x2="75" y2="60" stroke="#fbbf24" stroke-width="2" />
+                        <line x1="110" y1="85" x2="95" y2="95" stroke="#fbbf24" stroke-width="2" />
+                    </g> <g opacity="0.4">
+                        <ellipse cx="300" cy="50" rx="40" ry="20" fill="white">
+                            <animate attributename="cx" from="300" to="1300" dur="60s" repeatcount="indefinite" />
+                        </ellipse>
+                        <ellipse cx="320" cy="55" rx="35" ry="18" fill="white">
+                            <animate attributename="cx" from="320" to="1320" dur="60s" repeatcount="indefinite" />
+                        </ellipse>
+                        <ellipse cx="280" cy="55" rx="30" ry="15" fill="white">
+                            <animate attributename="cx" from="280" to="1280" dur="60s" repeatcount="indefinite" />
+                        </ellipse>
+                    </g> <g opacity="0.3">
+                        <ellipse cx="800" cy="70" rx="50" ry="25" fill="white">
+                            <animate attributename="cx" from="800" to="1800" dur="80s" repeatcount="indefinite" />
+                        </ellipse>
+                        <ellipse cx="825" cy="75" rx="40" ry="20" fill="white">
+                            <animate attributename="cx" from="825" to="1825" dur="80s" repeatcount="indefinite" />
+                        </ellipse>
+                    </g> <g opacity="0.5">
+                        <path d="M 400 80 Q 395 75 390 80 M 400 80 Q 405 75 410 80" stroke="white" stroke-width="2" fill="none">
+                            <animatetransform attributename="transform" type="translate" from="0 0" to="800 -20" dur="15s" repeatcount="indefinite" />
+                            <animate attributename="d" values="M 400 80 Q 395 75 390 80 M 400 80 Q 405 75 410 80;
+                                M 400 80 Q 395 82 390 80 M 400 80 Q 405 82 410 80;
+                                M 400 80 Q 395 75 390 80 M 400 80 Q 405 75 410 80" dur="0.5s" repeatcount="indefinite" />
+                        </path>
+                        <path d="M 500 100 Q 495 95 490 100 M 500 100 Q 505 95 510 100" stroke="white" stroke-width="2" fill="none">
+                            <animatetransform attributename="transform" type="translate" from="0 0" to="700 30" dur="18s" repeatcount="indefinite" />
+                            <animate attributename="d" values="M 500 100 Q 495 95 490 100 M 500 100 Q 505 95 510 100;
+                                M 500 100 Q 495 102 490 100 M 500 100 Q 505 102 510 100;
+                                M 500 100 Q 495 95 490 100 M 500 100 Q 505 95 510 100" dur="0.6s" repeatcount="indefinite" />
+                        </path>
+                        <path d="M 350 90 Q 345 85 340 90 M 350 90 Q 355 85 360 90" stroke="white" stroke-width="2" fill="none">
+                            <animatetransform attributename="transform" type="translate" from="0 0" to="900 -40" dur="20s" repeatcount="indefinite" />
+                            <animate attributename="d" values="M 350 90 Q 345 85 340 90 M 350 90 Q 355 85 360 90;
+                                M 350 90 Q 345 92 340 90 M 350 90 Q 355 92 360 90;
+                                M 350 90 Q 345 85 340 90 M 350 90 Q 355 85 360 90" dur="0.55s" repeatcount="indefinite" />
+                        </path>
+                    </g> <rect y="180" width="1200" height="120" fill="url(#oceanGradient)" /> <g opacity="0.3">
+                        <path d="M 0 200 Q 50 195 100 200 T 200 200 T 300 200 T 400 200 T 500 200 T 600 200 T 700 200 T 800 200 T 900 200 T 1000 200 T 1100 200 T 1200 200" stroke="white" stroke-width="2" fill="none">
+                            <animate attributename="d" values="M 0 200 Q 50 195 100 200 T 200 200 T 300 200 T 400 200 T 500 200 T 600 200 T 700 200 T 800 200 T 900 200 T 1000 200 T 1100 200 T 1200 200;
+                                M 0 200 Q 50 205 100 200 T 200 200 T 300 200 T 400 200 T 500 200 T 600 200 T 700 200 T 800 200 T 900 200 T 1000 200 T 1100 200 T 1200 200;
+                                M 0 200 Q 50 195 100 200 T 200 200 T 300 200 T 400 200 T 500 200 T 600 200 T 700 200 T 800 200 T 900 200 T 1000 200 T 1100 200 T 1200 200" dur="3s" repeatcount="indefinite" />
+                        </path>
+                        <path d="M 0 220 Q 60 215 120 220 T 240 220 T 360 220 T 480 220 T 600 220 T 720 220 T 840 220 T 960 220 T 1080 220 T 1200 220" stroke="white" stroke-width="2" fill="none">
+                            <animate attributename="d" values="M 0 220 Q 60 215 120 220 T 240 220 T 360 220 T 480 220 T 600 220 T 720 220 T 840 220 T 960 220 T 1080 220 T 1200 220;
+                                M 0 220 Q 60 225 120 220 T 240 220 T 360 220 T 480 220 T 600 220 T 720 220 T 840 220 T 960 220 T 1080 220 T 1200 220;
+                                M 0 220 Q 60 215 120 220 T 240 220 T 360 220 T 480 220 T 600 220 T 720 220 T 840 220 T 960 220 T 1080 220 T 1200 220" dur="4s" repeatcount="indefinite" />
+                        </path>
+                        <path d="M 0 240 Q 70 235 140 240 T 280 240 T 420 240 T 560 240 T 700 240 T 840 240 T 980 240 T 1120 240 T 1200 240" stroke="white" stroke-width="1.5" fill="none">
+                            <animate attributename="d" values="M 0 240 Q 70 235 140 240 T 280 240 T 420 240 T 560 240 T 700 240 T 840 240 T 980 240 T 1120 240 T 1200 240;
+                                M 0 240 Q 70 245 140 240 T 280 240 T 420 240 T 560 240 T 700 240 T 840 240 T 980 240 T 1120 240 T 1200 240;
+                                M 0 240 Q 70 235 140 240 T 280 240 T 420 240 T 560 240 T 700 240 T 840 240 T 980 240 T 1120 240 T 1200 240" dur="5s" repeatcount="indefinite" />
+                        </path>
+                    </g> <g>
+                        <animatetransform attributename="transform" type="translate" from="1200 0" to="-400 0" dur="25s" repeatcount="indefinite" />
+                        <g>
+                            <animatetransform attributename="transform" type="rotate" values="0 600 180; -1.5 600 180; 0 600 180; 1.5 600 180; 0 600 180" dur="4s" repeatcount="indefinite" /> <g opacity="0.2" transform="translate(0, 50) scale(1, -0.3)">
+                                <path d="M 520 180 L 540 160 L 660 160 L 680 180 Z" fill="#1e40af" />
+                                <rect x="540" y="140" width="120" height="20" fill="#1e40af" />
+                            </g> <path d="M 520 180 L 540 160 L 660 160 L 680 180 Z" fill="#1e40af" stroke="#1e3a8a" stroke-width="2" />
+                            <rect x="540" y="140" width="120" height="20" fill="#dc2626" stroke="#991b1b" stroke-width="1.5" /> <rect x="545" y="125" width="110" height="15" fill="#3b82f6" stroke="#1e40af" stroke-width="1" /> <rect x="550" y="128" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="562" y="128" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="574" y="128" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="586" y="128" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="598" y="128" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="610" y="128" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="622" y="128" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="634" y="128" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="646" y="128" width="8" height="8" fill="#fbbf24" opacity="0.9" /> <rect x="555" y="110" width="90" height="15" fill="#3b82f6" stroke="#1e40af" stroke-width="1" /> <rect x="560" y="113" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="572" y="113" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="584" y="113" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="596" y="113" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="608" y="113" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="620" y="113" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="632" y="113" width="8" height="8" fill="#fbbf24" opacity="0.9" /> <rect x="570" y="95" width="60" height="15" fill="#3b82f6" stroke="#1e40af" stroke-width="1" /> <rect x="575" y="98" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="587" y="98" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="599" y="98" width="8" height="8" fill="#fbbf24" opacity="0.9" />
+                            <rect x="611" y="98" width="8" height="8" fill="#fbbf24" opacity="0.9" /> <rect x="585" y="85" width="30" height="10" fill="#1e40af" stroke="#1e3a8a" stroke-width="1" />
+                            <rect x="588" y="87" width="6" height="5" fill="#60a5fa" opacity="0.8" />
+                            <rect x="596" y="87" width="6" height="5" fill="#60a5fa" opacity="0.8" />
+                            <rect x="604" y="87" width="6" height="5" fill="#60a5fa" opacity="0.8" /> <rect x="575" y="75" width="12" height="20" fill="#dc2626" stroke="#991b1b" stroke-width="1" />
+                            <rect x="575" y="73" width="12" height="3" fill="#1f2937" />
+                            <rect x="613" y="75" width="12" height="20" fill="#dc2626" stroke="#991b1b" stroke-width="1" />
+                            <rect x="613" y="73" width="12" height="3" fill="#1f2937" /> <g opacity="0.4">
+                                <ellipse cx="581" cy="68" rx="6" ry="4" fill="#9ca3af">
+                                    <animate attributename="cy" from="68" to="50" dur="3s" repeatcount="indefinite" />
+                                    <animate attributename="opacity" from="0.4" to="0" dur="3s" repeatcount="indefinite" />
+                                </ellipse>
+                                <ellipse cx="619" cy="70" rx="6" ry="4" fill="#9ca3af">
+                                    <animate attributename="cy" from="70" to="52" dur="3.5s" repeatcount="indefinite" />
+                                    <animate attributename="opacity" from="0.4" to="0" dur="3.5s" repeatcount="indefinite" />
+                                </ellipse>
+                            </g> <line x1="600" y1="85" x2="600" y2="70" stroke="#64748b" stroke-width="2" />
+                            <circle cx="600" cy="70" r="3" fill="#ef4444" />
+                            <line x1="595" y1="72" x2="605" y2="72" stroke="#64748b" stroke-width="1" /> <g transform="translate(545, 155)">
+                                <line x1="0" y1="0" x2="0" y2="12" stroke="#475569" stroke-width="2" />
+                                <circle cx="0" cy="12" r="3" fill="none" stroke="#475569" stroke-width="2" />
+                                <line x1="-4" y1="12" x2="4" y2="12" stroke="#475569" stroke-width="2" />
+                                <path d="M -4 12 L -4 8 M 4 12 L 4 8" stroke="#475569" stroke-width="2" fill="none" />
+                            </g> <ellipse cx="560" cy="133" rx="8" ry="4" fill="#f97316" stroke="#ea580c" stroke-width="1" />
+                            <ellipse cx="575" cy="133" rx="8" ry="4" fill="#f97316" stroke="#ea580c" stroke-width="1" />
+                            <ellipse cx="625" cy="133" rx="8" ry="4" fill="#f97316" stroke="#ea580c" stroke-width="1" />
+                            <ellipse cx="640" cy="133" rx="8" ry="4" fill="#f97316" stroke="#ea580c" stroke-width="1" />
+                        </g>
+                    </g>
+                </svg>
+                </div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="text-4xl text-white">🌊</span>
+                        <div class="inline-flex items-center gap-2 bg-white/20 rounded-full px-3 py-1 backdrop-blur-sm border border-white/30">
+                            <span class="text-xs font-semibold uppercase tracking-wide text-white">Booking Kapal</span>
+                        </div>
+                    </div>
+                    <h2 id="hero-title" class="text-4xl font-bold text-white mb-3 drop-shadow-lg">Pesan Tiket Kapal dengan Mudah</h2>
+                    <p id="hero-subtitle" class="text-lg text-white/90 max-w-2xl drop-shadow-md">Pilih rute, tanggal, dan nikmati perjalanan laut Anda</p>
+                </div>
+            </section>
+
+            <div id="booking-view">
+                <div class="bg-white rounded-3xl shadow-2xl p-6 lg:p-10">
+                    <h3 id="booking-title" class="text-3xl font-bold text-[#0f172a] mb-8">Pilih Rute &amp; Jadwal</h3>
+
+                    <div id="routes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        </div>
+
+                    <div id="seat-map-section" class="hidden mb-8">
+                        <div class="bg-gradient-to-br from-[#f8fafc] to-[#e2e8f0] rounded-2xl p-6 border-2 border-[#cbd5e1]">
+                            <div class="flex items-center justify-between mb-6">
+                                <h4 class="text-xl font-bold text-[#0f172a] flex items-center gap-2">
+                                    <span>🪑</span> Peta Kursi Kapal
+                                </h4>
+                                <div class="flex items-center gap-4 text-xs">
+                                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-[#e2e8f0] border border-[#cbd5e1]"></span> <span class="text-[#64748b]">Tersedia</span></div>
+                                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-[#0ea5e9]"></span> <span class="text-[#64748b]">Dipilih</span></div>
+                                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-[#94a3b8]"></span> <span class="text-[#64748b]">Terisi</span></div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-center gap-2 mb-6">
+                                <button type="button" class="deck-tab-btn active px-6 py-2 rounded-lg font-semibold text-sm transition-colors" data-deck="1"> Dek 1 </button>
+                                <button type="button" class="deck-tab-btn px-6 py-2 rounded-lg font-semibold text-sm transition-colors" data-deck="2"> Dek 2 </button>
+                                <button type="button" class="deck-tab-btn px-6 py-2 rounded-lg font-semibold text-sm transition-colors" data-deck="3"> Dek 3 </button>
+                            </div>
+
+                            <div id="deck-1" class="deck-container">
+                                <div class="max-w-xs mx-auto">
+                                    <div class="text-center mb-3">
+                                        <span class="inline-block bg-[#0ea5e9] text-white text-xs font-bold px-3 py-1 rounded-full">DEK 1 - Ekonomi</span>
+                                    </div>
+                                    <div id="seat-grid-deck-1" class="grid grid-cols-6 gap-1 mb-2">
+                                        </div>
+                                </div>
+                            </div>
+                            <div id="deck-2" class="deck-container hidden">
+                                <div class="max-w-xs mx-auto">
+                                    <div class="text-center mb-3">
+                                        <span class="inline-block bg-[#f59e0b] text-white text-xs font-bold px-3 py-1 rounded-full">DEK 2 - Bisnis</span>
+                                    </div>
+                                    <div id="seat-grid-deck-2" class="grid grid-cols-6 gap-1 mb-2">
+                                        </div>
+                                </div>
+                            </div>
+                            <div id="deck-3" class="deck-container hidden">
+                                <div class="max-w-xs mx-auto">
+                                    <div class="text-center mb-3">
+                                        <span class="inline-block bg-[#8b5cf6] text-white text-xs font-bold px-3 py-1 rounded-full">DEK 3 - VIP</span>
+                                    </div>
+                                    <div id="seat-grid-deck-3" class="grid grid-cols-4 gap-1 mb-2">
+                                        </div>
+                                </div>
+                            </div>
+                            <p id="selected-seat-info" class="text-sm text-[#64748b] text-center mt-4">Pilih kursi Anda dari peta di atas</p>
+                        </div>
+                    </div>
+
+                    <div id="route-actions" class="hidden mb-8">
+                        <div class="flex gap-4 max-w-md mx-auto">
+                            <button type="button" id="cancel-booking-btn" class="flex-1 bg-white hover:bg-[#f8fafc] text-[#64748b] border-2 border-[#e2e8f0] font-semibold py-4 rounded-xl transition-colors"> ✕ Batal Pesan </button>
+                            <button type="button" id="next-to-form-btn" class="flex-1 bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-semibold py-4 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"> Lanjut Isi Data → </button>
+                        </div>
+                    </div>
+
+                    <form id="booking-form" class="space-y-6 hidden">
+                        <h4 class="text-xl font-bold text-[#0f172a] mb-4">Detail Penumpang</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="nama" class="block text-sm font-medium text-[#0f172a] mb-2">Nama Lengkap</label>
+                                <input type="text" id="nama" name="nama" required class="w-full px-4 py-3 rounded-xl border border-[#cbd5e1] focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9]" placeholder="Masukkan nama lengkap">
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-[#0f172a] mb-2">Email</label>
+                                <input type="email" id="email" name="email" required class="w-full px-4 py-3 rounded-xl border border-[#cbd5e1] focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9]" placeholder="email@gmail.com">
+                            </div>
+                            <div>
+                                <label for="telepon" class="block text-sm font-medium text-[#0f172a] mb-2">No. Telepon</label>
+                                <input type="tel" id="telepon" name="telepon" required class="w-full px-4 py-3 rounded-xl border border-[#cbd5e1] focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9]" placeholder="08xxxxxxxxxx">
+                            </div>
+                            <div>
+                                <label for="tanggal" class="block text-sm font-medium text-[#0f172a] mb-2">Tanggal Keberangkatan</label>
+                                <input type="date" id="tanggal" name="tanggal" required class="w-full px-4 py-3 rounded-xl border border-[#cbd5e1] focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9]">
+                                <p class="text-xs text-[#64748b] mt-1">Hanya tersedia hingga akhir 2026. Jadwal per minggu tergantung rute kapal.</p>
+                            </div>
+                            <div>
+                                <label for="jenis-kelamin" class="block text-sm font-medium text-[#0f172a] mb-2">Jenis Kelamin</label>
+                                <select id="jenis-kelamin" name="jenis-kelamin" required class="w-full px-4 py-3 rounded-xl border border-[#cbd5e1] focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9]">
+                                    <option value="">Pilih jenis kelamin</option>
+                                    <option value="Laki-laki">Laki-laki</option>
+                                    <option value="Perempuan">Perempuan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="kategori" class="block text-sm font-medium text-[#0f172a] mb-2">Kategori Penumpang</label>
+                                <select id="kategori" name="kategori" required class="w-full px-4 py-3 rounded-xl border border-[#cbd5e1] focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9]">
+                                    <option value="">Pilih kategori</option>
+                                    <option value="Dewasa">Dewasa</option>
+                                    <option value="Anak">Anak (2-12 tahun)</option>
+                                    <option value="Lansia">Lansia (60+ tahun)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#fef3c7] border-2 border-[#fbbf24] rounded-2xl p-4">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" id="bawa-anak" name="bawa-anak" class="mt-1 w-5 h-5 rounded border-[#fbbf24] text-[#f59e0b] focus:ring-2 focus:ring-[#f59e0b]">
+                                <label for="bawa-anak" class="flex-1 text-sm text-[#92400e]">
+                                    <span class="font-semibold">👶 Membawa Anak Kecil (di bawah 2 tahun)</span>
+                                    <p class="text-xs mt-1">Centang jika Anda membawa bayi atau anak di bawah 2 tahun yang tidak memerlukan kursi terpisah</p>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#f8fafc] rounded-2xl p-6 border border-[#e2e8f0]">
+                            <h4 class="text-lg font-semibold text-[#0f172a] mb-4">Ringkasan Pemesanan</h4>
+                            <div id="booking-summary" class="space-y-2 text-sm text-[#64748b]">
+                                <p>Silakan pilih rute dan lengkapi data untuk melihat ringkasan</p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center">
+                            <button type="submit" id="submit-btn" class="w-full max-w-md bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-semibold py-4 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"> Lanjut ke Pembayaran → </button>
+                        </div>
+                        <p id="form-message" class="text-sm text-center"></p>
+                    </form>
+                </div>
+            </div>
+
+            <div id="payment-view" class="hidden">
+                <div class="bg-white rounded-3xl shadow-2xl p-6 lg:p-10">
+                    <div class="flex items-center gap-3 mb-6">
+                        <button type="button" id="back-to-booking-btn" class="text-[#0ea5e9] hover:text-[#0284c7] font-semibold"> ← Kembali </button>
+                    </div>
+                    <h3 class="text-3xl font-bold text-[#0f172a] mb-2">💳 Konfirmasi Pembayaran</h3>
+                    <p class="text-sm text-[#64748b] mb-8">Pilih metode untuk mengirim konfirmasi pembayaran</p>
+
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 space-y-6">
+                            <div>
+                                <h4 class="text-lg font-semibold text-[#0f172a] mb-4">Pilih Metode Pembayaran</h4>
+                                <div class="mb-4">
+                                    <p class="text-sm font-semibold text-[#64748b] mb-3">E-WALLET</p>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <button type="button" class="payment-method-btn border-2 border-[#e2e8f0] rounded-xl p-4 hover:border-[#0ea5e9] transition-all" data-method="gopay">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-12 h-12 bg-[#00AA13] rounded-lg flex items-center justify-center text-white font-bold text-xs">GO</div>
+                                                <div class="text-left"><p class="font-semibold text-[#0f172a] text-sm">GoPay</p><p class="text-xs text-[#64748b]">Bayar dengan GoPay</p></div>
+                                            </div>
+                                        </button>
+                                        <button type="button" class="payment-method-btn border-2 border-[#e2e8f0] rounded-xl p-4 hover:border-[#0ea5e9] transition-all" data-method="ovo">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-12 h-12 bg-[#4C3494] rounded-lg flex items-center justify-center text-white font-bold text-xs">OVO</div>
+                                                <div class="text-left"><p class="font-semibold text-[#0f172a] text-sm">OVO</p><p class="text-xs text-[#64748b]">Bayar dengan OVO</p></div>
+                                            </div>
+                                        </button>
+                                        <button type="button" class="payment-method-btn border-2 border-[#e2e8f0] rounded-xl p-4 hover:border-[#0ea5e9] transition-all" data-method="dana">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-12 h-12 bg-[#118EEA] rounded-lg flex items-center justify-center text-white font-bold text-xs">DANA</div>
+                                                <div class="text-left"><p class="font-semibold text-[#0f172a] text-sm">DANA</p><p class="text-xs text-[#64748b]">Bayar dengan DANA</p></div>
+                                            </div>
+                                        </button>
+                                        <button type="button" class="payment-method-btn border-2 border-[#e2e8f0] rounded-xl p-4 hover:border-[#0ea5e9] transition-all" data-method="shopeepay">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-12 h-12 bg-[#EE4D2D] rounded-lg flex items-center justify-center text-white font-bold text-xs">SP</div>
+                                                <div class="text-left"><p class="font-semibold text-[#0f172a] text-sm">ShopeePay</p><p class="text-xs text-[#64748b]">Bayar dengan ShopeePay</p></div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <p class="text-sm font-semibold text-[#64748b] mb-3">TRANSFER BANK</p>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <button type="button" class="payment-method-btn border-2 border-[#e2e8f0] rounded-xl p-4 hover:border-[#0ea5e9] transition-all" data-method="bca">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-12 h-12 bg-[#0066AE] rounded-lg flex items-center justify-center text-white font-bold text-xs">BCA</div>
+                                                <div class="text-left"><p class="font-semibold text-[#0f172a] text-sm">BCA</p><p class="text-xs text-[#64748b]">Transfer Bank BCA</p></div>
+                                            </div>
+                                        </button>
+                                        <button type="button" class="payment-method-btn border-2 border-[#e2e8f0] rounded-xl p-4 hover:border-[#0ea5e9] transition-all" data-method="mandiri">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-12 h-12 bg-[#003D79] rounded-lg flex items-center justify-center text-white font-bold text-xs">MDR</div>
+                                                <div class="text-left"><p class="font-semibold text-[#0f172a] text-sm">Mandiri</p><p class="text-xs text-[#64748b]">Transfer Bank Mandiri</p></div>
+                                            </div>
+                                        </button>
+                                        <button type="button" class="payment-method-btn border-2 border-[#e2e8f0] rounded-xl p-4 hover:border-[#0ea5e9] transition-all" data-method="bni">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-12 h-12 bg-[#F37021] rounded-lg flex items-center justify-center text-white font-bold text-xs">BNI</div>
+                                                <div class="text-left"><p class="font-semibold text-[#0f172a] text-sm">BNI</p><p class="text-xs text-[#64748b]">Transfer Bank BNI</p></div>
+                                            </div>
+                                        </button>
+                                        <button type="button" class="payment-method-btn border-2 border-[#e2e8f0] rounded-xl p-4 hover:border-[#0ea5e9] transition-all" data-method="bri">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-12 h-12 bg-[#00529C] rounded-lg flex items-center justify-center text-white font-bold text-xs">BRI</div>
+                                                <div class="text-left"><p class="font-semibold text-[#0f172a] text-sm">BRI</p><p class="text-xs text-[#64748b]">Transfer Bank BRI</p></div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-[#64748b] mb-3">VIRTUAL ACCOUNT</p>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <button type="button" class="payment-method-btn border-2 border-[#e2e8f0] rounded-xl p-4 hover:border-[#0ea5e9] transition-all" data-method="va-bca">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-12 h-12 bg-[#0066AE] rounded-lg flex items-center justify-center text-white font-bold text-xs">VA</div>
+                                                <div class="text-left"><p class="font-semibold text-[#0f172a] text-sm">VA BCA</p><p class="text-xs text-[#64748b]">Virtual Account BCA</p></div>
+                                            </div>
+                                        </button>
+                                        <button type="button" class="payment-method-btn border-2 border-[#e2e8f0] rounded-xl p-4 hover:border-[#0ea5e9] transition-all" data-method="va-mandiri">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-12 h-12 bg-[#003D79] rounded-lg flex items-center justify-center text-white font-bold text-xs">VA</div>
+                                                <div class="text-left"><p class="font-semibold text-[#0f172a] text-sm">VA Mandiri</p><p class="text-xs text-[#64748b]">Virtual Account Mandiri</p></div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-1">
+                            <div class="bg-[#f8fafc] rounded-2xl p-6 border border-[#e2e8f0] sticky top-24">
+                                <h4 class="text-lg font-semibold text-[#0f172a] mb-4">Ringkasan Pembayaran</h4>
+                                <div id="payment-summary" class="space-y-3 text-sm mb-6">
+                                    </div>
+                                <div class="border-t border-[#cbd5e1] pt-4 mb-6">
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-semibold text-[#0f172a]">Total Pembayaran</span>
+                                        <span id="payment-total" class="text-2xl font-bold text-[#0ea5e9]">Rp 0</span>
+                                    </div>
+                                </div>
+                                
+                                <a href="https://wa.link/zlp5x8" target="_blank"><button type="button" id="confirm-whatsapp-btn" class="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold py-4 rounded-xl transition-colors" disabled"> 💬 Konfirmasi via WhatsApp </button></a>
+                                <a href="mailto:avrinandaindrianibetah@gmail.com?subject=Form%20Pemesanan%20Tiket
+&body=Nama:%20%0D%0A
+No%20Tlp:%20%0D%0A
+Rute:%20%0D%0A
+No%20Dek:%20%0D%0A
+Tgl%20Berangkat:%20%0D%0A
+Kategori:%20" target="_blank"><button type="button" id="send-email-btn" class="w-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-semibold py-4 rounded-xl transition-colors mt-3" disabled> 📧 Kirim Detail via Email </button></a>
+                                
+                                <p id="payment-message" class="text-xs text-center mt-3"></p>
+                                
+                                <div class="mt-6 p-4 bg-[#e0f2fe] rounded-xl border border-[#0ea5e9]">
+                                    <p class="text-xs text-[#0369a1] font-semibold mb-1">ℹ CARA PEMBAYARAN</p>
+                                    <p class="text-xs text-[#0369a1]">Klik tombol di atas untuk mengirim detail booking via WA (disarankan) atau Email. Pesanan Anda akan tersimpan di Riwayat Akun.</p>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+    </div>
+
+    <script>
+        // State management
+        let selectedRoute = null;
+        let selectedSeat = null;
+        let bookingData = [];
+        let pendingBooking = null;
+        let selectedPaymentMethod = null;
+
+        // --- Variabel Admin dan Notifikasi ---
+        const ADMIN_WHATSAPP = '6281234567890'; 
+        const ADMIN_EMAIL_RECEIVER = 'avrinandaindrianibetah@gmail.com'; 
+        // ------------------------------------
+
+        // Sample routes data 
+        const routes = [
+            { id: 1, from: 'Manado', to: 'Siau', price: 225000, duration: '7 jam', ship: 'KM Glory Mary', rating: 4.8 },
+            { id: 2, from: 'Manado', to: 'Tahuna', price: 200000, duration: '16 jam', ship: 'KM Saint Mary', rating: 4.5 },
+            { id: 3, from: 'Manado', to: 'Talaud', price: 300000, duration: '23 jam', ship: 'KM Gregorius', rating: 4.9 },
+            { id: 4, from: 'Siau', to: 'Manado', price: 225000, duration: '7 jam', ship: 'KM Barcelona 1', rating: 4.2 },
+            { id: 5, from: 'Tahuna', to: 'Manado', price: 200000, duration: '16 jam', ship: 'KM Barcelona 3', rating: 4.7 },
+            { id: 6, from: 'Talaud', to: 'Manado', price: 300000, duration: '23 jam', ship: 'KM Cantika Lestari', rating: 4.0 }
+        ];
+
+        // Occupied seats (example) - organized by deck
+        const occupiedSeats = {
+            1: ['A3', 'B5', 'C2', 'D4', 'E1', 'F6'],
+            2: ['A2', 'B4', 'C5', 'D1', 'E3', 'F2'],
+            3: ['A1', 'B3', 'C2', 'D4']
+        };
+        
+        let currentDeck = 1;
+
+        // --- Core Functions ---
+
+        // Render routes (MENAMPILKAN RATING PADA KARTU RUTE)
+        function renderRoutes() {
+            const container = document.getElementById('routes-container');
+            container.innerHTML = routes.map(route => `
+                <button type="button" class="route-card bg-white border-2 border-[#e2e8f0] rounded-2xl p-6 text-left" data-route-id="${route.id}">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <p class="text-xs text-[#64748b] font-medium mb-1">RUTE</p>
+                            <p class="text-lg font-bold text-[#0f172a]">${route.from} → ${route.to}</p>
+                        </div>
+                        <span class="text-2xl">⛴</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-end mb-2">
+                        <div class="flex items-center gap-1 text-sm text-[#f59e0b]">
+                            <span class="font-bold">${route.rating}</span>
+                            <span>⭐</span>
+                            <span class="text-xs text-[#64748b] ml-1">(Promo Rating)</span>
+                        </div>
+                        <p class="text-xl font-bold text-[#0ea5e9]">Rp ${route.price.toLocaleString('id-ID')}</p>
+                    </div>
+
+                    <div class="space-y-1 text-sm text-[#64748b]">
+                        <p>🚢 ${route.ship}</p>
+                        <p>⏱ ${route.duration}</p>
+                    </div>
+                </button>
+            `).join('');
+
+            // Add click handlers
+            document.querySelectorAll('.route-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const routeId = parseInt(this.dataset.routeId);
+                    selectRoute(routeId);
+                });
+            });
+        }
+
+        // Select route
+        function selectRoute(routeId) {
+            selectedRoute = routes.find(r => r.id === routeId);
+            
+            // Update UI
+            document.querySelectorAll('.route-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-route-id="${routeId}"]`).classList.add('selected');
+            
+            // FITUR UTAMA: MENAMPILKAN AKSI RUTE DAN PETA KURSI
+            // Show seat map and action buttons
+            document.getElementById('seat-map-section').classList.remove('hidden');
+            document.getElementById('route-actions').classList.remove('hidden');
+            document.getElementById('booking-form').classList.add('hidden'); // Sembunyikan form jika muncul
+            
+            renderSeats();
+            updateSummary();
+            
+            // Scroll ke peta kursi/aksi
+            setTimeout(() => {
+                document.getElementById('seat-map-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+
+        // Render seats for specific deck
+        function renderDeckSeats(deckNum, numRows, numCols) {
+            const seatGrid = document.getElementById(`seat-grid-deck-${deckNum}`);
+            const rows = ['A', 'B', 'C', 'D', 'E', 'F'].slice(0, numRows);
+            
+            let html = '';
+            rows.forEach(row => {
+                for (let col = 1; col <= numCols; col++) {
+                    const seatId = `${row}${col}`;
+                    const fullSeatId = `D${deckNum}-${seatId}`;
+                    const isOccupied = occupiedSeats[deckNum] && occupiedSeats[deckNum].includes(seatId);
+                    const isSelected = selectedSeat === fullSeatId;
+                    
+                    let className = 'w-full aspect-square rounded text-[10px] font-semibold flex items-center justify-center border transition-all cursor-pointer';
+                    
+                    if (isOccupied) {
+                        className += ' bg-[#94a3b8] border-[#94a3b8] text-white cursor-not-allowed';
+                    } else if (isSelected) {
+                        className += ' bg-[#0ea5e9] border-[#0ea5e9] text-white';
+                    } else {
+                        className += ' bg-[#e2e8f0] border-[#cbd5e1] text-[#0f172a] hover:border-[#0ea5e9]';
+                    }
+                    
+                    html += `<button type="button" class="${className}" data-seat="${fullSeatId}" data-deck="${deckNum}" ${isOccupied ? 'disabled' : ''}>${seatId}</button>`;
+                }
+            });
+            
+            seatGrid.innerHTML = html;
+            
+            // Add click handlers
+            document.querySelectorAll(`#seat-grid-deck-${deckNum} [data-seat]`).forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!this.disabled) {
+                        selectSeat(this.dataset.seat);
+                    }
+                });
+            });
+        }
+
+        // Render seats for all decks
+        function renderSeats() {
+            renderDeckSeats(1, 6, 6); // Deck 1: 6 rows x 6 cols (Ekonomi)
+            renderDeckSeats(2, 6, 6); // Deck 2: 6 rows x 6 cols (Bisnis)
+            renderDeckSeats(3, 4, 4); // Deck 3: 4 rows x 4 cols (VIP)
+        }
+
+        // Select seat
+        function selectSeat(seatId) {
+            selectedSeat = seatId;
+            renderSeats();
+            document.getElementById('selected-seat-info').textContent = `Kursi ${seatId} dipilih`;
+            updateSummary();
+        }
+        
+        // Switch deck
+        function switchDeck(deckNum) {
+            currentDeck = deckNum;
+            
+            // Update tab buttons
+            document.querySelectorAll('.deck-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-deck="${deckNum}"]`).classList.add('active');
+            
+            // Show/hide deck containers
+            document.querySelectorAll('.deck-container').forEach(container => {
+                container.classList.add('hidden');
+            });
+            document.getElementById(`deck-${deckNum}`).classList.remove('hidden');
+        }
+
+        // Update booking summary
+        function updateSummary() {
+            const summaryDiv = document.getElementById('booking-summary');
+            
+            if (!selectedRoute) {
+                summaryDiv.innerHTML = '<p>Silakan pilih rute dan lengkapi data untuk melihat ringkasan</p>';
+                return;
+            }
+            
+            summaryDiv.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span>Rute:</span>
+                        <span class="font-semibold text-[#0f172a]">${selectedRoute.from} → ${selectedRoute.to}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Kapal:</span>
+                        <span class="font-semibold text-[#0f172a]">${selectedRoute.ship}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Durasi:</span>
+                        <span class="font-semibold text-[#0f172a]">${selectedRoute.duration}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Kursi:</span>
+                        <span class="font-semibold text-[#0f172a]">${selectedSeat || 'Belum dipilih'}</span>
+                    </div>
+                    <div class="flex justify-between pt-2 border-t border-[#cbd5e1]">
+                        <span class="font-semibold">Total:</span>
+                        <span class="font-bold text-lg text-[#0ea5e9]">Rp ${selectedRoute.price.toLocaleString('id-ID')}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Utility function to reset all temporary booking state
+        function resetBooking() {
+            selectedRoute = null;
+            selectedSeat = null;
+            pendingBooking = null;
+            selectedPaymentMethod = null;
+            
+            // Reset UI elements
+            document.getElementById('booking-form').reset();
+            document.getElementById('booking-form').classList.add('hidden');
+            document.getElementById('seat-map-section').classList.add('hidden');
+            document.getElementById('route-actions').classList.add('hidden');
+            document.querySelectorAll('.route-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById('payment-message').textContent = '';
+            const paymentMethods = document.querySelectorAll('.payment-method-btn');
+            paymentMethods.forEach(b => {
+                b.classList.remove('border-[#0ea5e9]', 'bg-[#f0f9ff]');
+                b.classList.add('border-[#e2e8f0]');
+            });
+            
+            // Set tombol WA/Email kembali ke disabled
+            const whatsappBtn = document.getElementById('confirm-whatsapp-btn');
+            const emailBtn = document.getElementById('send-email-btn');
+            if(whatsappBtn) whatsappBtn.disabled = true;
+            if(emailBtn) emailBtn.disabled = true;
+
+            updateSummary();
+        }
+
+        // View switcher function
+        function switchView(viewId) {
+            const allViews = ['booking-view', 'promo-view', 'account-view', 'payment-view']; // Riwayat dihapus dari sini
+            
+            allViews.forEach(id => {
+                const viewEl = document.getElementById(id);
+                if (viewEl) {
+                    if (id === viewId) {
+                        viewEl.classList.remove('hidden');
+                    } else {
+                        viewEl.classList.add('hidden');
+                    }
+                }
+            });
+            
+            // Update nav buttons active state
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                // Reset all buttons to inactive style
+                btn.classList.remove('bg-[#0ea5e9]', 'text-white', 'border-transparent');
+                btn.classList.add('bg-white', 'text-[#0ea5e9]', 'border-2', 'border-[#0ea5e9]');
+            });
+            
+            // Set active button style
+            const activeNavId = viewId.replace('-view', '');
+            // Handle home button specially as it contains the booking view
+            const activeNavBtn = document.getElementById(`nav-${activeNavId}-btn`) || (viewId === 'account-view' ? document.getElementById('nav-account-btn') : document.getElementById('nav-home-btn'));
+            if (activeNavBtn) {
+                activeNavBtn.classList.remove('bg-white', 'text-[#0ea5e9]', 'border-2', 'border-[#0ea5e9]');
+                activeNavBtn.classList.add('bg-[#0ea5e9]', 'text-white', 'border-transparent');
+            }
+            
+            // Scroll to top of app
+            document.getElementById('app-root').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- Data Handling (Data SDK) ---
+
+        // Data SDK handler
+        const dataHandler = {
+            onDataChanged(data) {
+                bookingData = data;
+                renderHistory();
+                updateProfileInfo();
+            }
+        };
+
+        // Initialize Data SDK
+        async function initDataSdk() {
+            if (window.dataSdk) {
+                const result = await window.dataSdk.init(dataHandler);
+                if (!result.isOk) {
+                    console.error('Failed to initialize Data SDK');
+                }
+            }
+        }
+        
+        // Render history list
+        function renderHistory() {
+            const totalEl = document.getElementById('total-bookings');
+            const accountTotalEl = document.getElementById('account-total-bookings');
+            const emptyEl = document.getElementById('history-empty');
+            const listEl = document.getElementById('history-list');
+            
+            if (totalEl) totalEl.textContent = bookingData.length;
+            if (accountTotalEl) accountTotalEl.textContent = bookingData.length;
+            
+            if (bookingData.length === 0) {
+                emptyEl.classList.remove('hidden');
+                listEl.classList.add('hidden');
+                return;
+            }
+            
+            emptyEl.classList.add('hidden');
+            listEl.classList.remove('hidden');
+            
+            listEl.innerHTML = bookingData.slice().reverse().map((booking, index) => { // Reverse to show latest first
+                const bookingDate = new Date(booking.waktu_booking);
+                return `
+                    <div class="bg-gradient-to-br from-white to-[#f8fafc] border-2 border-[#e2e8f0] rounded-2xl p-6 hover:shadow-lg transition-all">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-2xl">🎫</span>
+                                    <span class="inline-block bg-[#0ea5e9] text-white text-xs font-bold px-3 py-1 rounded-full">
+                                        BOOKING #${bookingData.length - index}
+                                    </span>
+                                </div>
+                                <h4 class="text-xl font-bold text-[#0f172a] mb-1">${booking.rute}</h4>
+                                <p class="text-sm text-[#64748b]">🚢 ${booking.kapal}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-[#64748b] mb-1">Total Harga</p>
+                                <p class="text-xl font-bold text-[#0ea5e9]">Rp ${booking.harga.toLocaleString('id-ID')}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div><p class="text-xs text-[#64748b] mb-1">Nama</p><p class="text-sm font-semibold text-[#0f172a]">${booking.nama}</p></div>
+                            <div><p class="text-xs text-[#64748b] mb-1">Jenis Kelamin</p><p class="text-sm font-semibold text-[#0f172a]">${booking.jenis_kelamin || '-'}</p></div>
+                            <div><p class="text-xs text-[#64748b] mb-1">Kategori</p><p class="text-sm font-semibold text-[#0f172a]">${booking.kategori || '-'}</p></div>
+                            <div><p class="text-xs text-[#64748b] mb-1">Tanggal</p><p class="text-sm font-semibold text-[#0f172a]">${booking.tanggal}</p></div>
+                            <div><p class="text-xs text-[#64748b] mb-1">Kursi</p><p class="text-sm font-semibold text-[#0f172a]">🪑 ${booking.kursi}</p></div>
+                            <div><p class="text-xs text-[#64748b] mb-1">Bawa Anak</p><p class="text-sm font-semibold text-[#0f172a]">${booking.bawa_anak ? '✓ Ya' : '✗ Tidak'}</p></div>
+                            <div><p class="text-xs text-[#64748b] mb-1">Waktu Booking</p><p class="text-sm font-semibold text-[#0f172a]">${bookingDate.toLocaleDateString('id-ID')}</p></div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between pt-4 border-t border-[#e2e8f0]">
+                            <div class="flex items-center gap-4 text-xs text-[#64748b]">
+                                <span>📧 ${booking.email}</span>
+                                <span>📱 ${booking.telepon}</span>
+                            </div>
+                            <span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-semibold px-3 py-1 rounded-full">
+                                ✓ Terkonfirmasi
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update profile info from latest booking
+        function updateProfileInfo() {
+            if (bookingData.length > 0) {
+                const latestBooking = bookingData[bookingData.length - 1];
+                
+                // Update profile name
+                const profileName = document.getElementById('profile-name');
+                const profileNameDetail = document.getElementById('profile-name-detail');
+                if (profileName) profileName.textContent = latestBooking.nama || '-';
+                if (profileNameDetail) profileNameDetail.textContent = latestBooking.nama || 'Belum ada data';
+                
+                // Update email
+                const profileEmail = document.getElementById('profile-email');
+                if (profileEmail) profileEmail.textContent = latestBooking.email || 'Belum ada data';
+                
+                // Update phone
+                const profilePhone = document.getElementById('profile-phone');
+                if (profilePhone) profilePhone.textContent = latestBooking.telepon || 'Belum ada data';
+                
+                // Update loyalty points (10 points per booking)
+                const loyaltyPoints = bookingData.length * 10;
+                const loyaltyPointsEl = document.getElementById('loyalty-points');
+                if (loyaltyPointsEl) loyaltyPointsEl.textContent = loyaltyPoints;
+                
+                // Update loyalty progress
+                const progress = Math.min((loyaltyPoints % 100), 100);
+                const loyaltyProgress = document.getElementById('loyalty-progress');
+                const loyaltyProgressText = document.getElementById('loyalty-progress-text');
+                if (loyaltyProgress) loyaltyProgress.style.width = progress + '%';
+                if (loyaltyProgressText) loyaltyProgressText.textContent = `${loyaltyPoints % 100}/100`;
+                
+                // Update favorite routes
+                const routeCounts = {};
+                bookingData.forEach(booking => {
+                    routeCounts[booking.rute] = (routeCounts[booking.rute] || 0) + 1;
+                });
+                
+                const sortedRoutes = Object.entries(routeCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+                const favoriteRoutesEl = document.getElementById('favorite-routes');
+                if (favoriteRoutesEl && sortedRoutes.length > 0) {
+                    favoriteRoutesEl.innerHTML = sortedRoutes.map(([route, count]) => `
+                        <div class="flex items-center justify-between py-2 border-b border-[#e2e8f0] last:border-0">
+                            <span class="text-[#0f172a] font-semibold">${route}</span>
+                            <span class="text-xs bg-[#e0f2fe] text-[#0369a1] px-2 py-1 rounded-full">${count}x</span>
+                        </div>
+                    `).join('');
+                } else if (favoriteRoutesEl) {
+                    favoriteRoutesEl.innerHTML = '<p>Belum ada rute favorit. Lakukan pemesanan untuk melihat rute yang sering Anda gunakan.</p>';
+                }
+            }
+        }
+
+
+        // --- Event Handlers ---
+
+        // Cancel booking button
+        document.getElementById('cancel-booking-btn').addEventListener('click', function() {
+            resetBooking();
+            // Scroll to top of routes
+            document.getElementById('routes-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        
+        // Next to form button
+        document.getElementById('next-to-form-btn').addEventListener('click', function() {
+            if (!selectedSeat) {
+                // Show inline message
+                const seatInfo = document.getElementById('selected-seat-info');
+                seatInfo.textContent = '⚠ Silakan pilih kursi terlebih dahulu';
+                seatInfo.className = 'text-sm text-red-600 text-center font-semibold';
+                
+                setTimeout(() => {
+                    seatInfo.textContent = 'Pilih kursi Anda dari peta di atas';
+                    seatInfo.className = 'text-sm text-[#64748b] text-center';
+                }, 3000);
+                return;
+            }
+            
+            // Show booking form
+            document.getElementById('booking-form').classList.remove('hidden');
+            
+            // Hide Route Actions (Batal/Lanjut) setelah pindah ke form
+            document.getElementById('route-actions').classList.add('hidden');
+            
+            // Scroll to form
+            setTimeout(() => {
+                document.getElementById('booking-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        });
+        
+        // Form submission - Go to payment
+        document.getElementById('booking-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const messageEl = document.getElementById('form-message');
+            
+            if (!selectedRoute || !selectedSeat) {
+                messageEl.textContent = 'Silakan pilih rute dan kursi terlebih dahulu';
+                messageEl.className = 'text-sm text-center text-red-600';
+                return;
+            }
+
+            // Validasi tanggal kustom
+            const dateInput = document.getElementById('tanggal');
+            const selectedDate = new Date(dateInput.value);
+            const minDate = new Date();
+            const maxDate = new Date(2026, 11, 31); // 31 December 2026
+
+            // Normalisasi tanggal min (Hanya bandingkan tanggal, abaikan waktu)
+            minDate.setHours(0, 0, 0, 0);
+
+            // Validasi: cek apakah tanggal dipilih ada di rentang yang diizinkan (Hari ini s/d 2026)
+            if (selectedDate < minDate || selectedDate > maxDate) {
+                 messageEl.textContent = 'Tanggal keberangkatan harus antara hari ini hingga 31 Desember 2026.';
+                 messageEl.className = 'text-sm text-center text-red-600';
+                 return;
+            }
+            // End Validasi tanggal
+
+            // Store pending booking
+            pendingBooking = {
+                nama: document.getElementById('nama').value,
+                email: document.getElementById('email').value,
+                telepon: document.getElementById('telepon').value,
+                tanggal: document.getElementById('tanggal').value,
+                jenis_kelamin: document.getElementById('jenis-kelamin').value,
+                kategori: document.getElementById('kategori').value,
+                bawa_anak: document.getElementById('bawa-anak').checked,
+                rute: `${selectedRoute.from} - ${selectedRoute.to}`,
+                kapal: selectedRoute.ship,
+                kursi: selectedSeat,
+                harga: selectedRoute.price,
+                waktu_booking: new Date().toISOString()
+            };
+            
+            // Show payment view
+            showPaymentView();
+        });
+        
+        // Show payment view
+        function showPaymentView() {
+            if (!pendingBooking) return;
+            
+            switchView('payment-view');
+            
+            // Update payment summary
+            const paymentSummary = document.getElementById('payment-summary');
+            paymentSummary.innerHTML = `
+                <div class="flex justify-between">
+                    <span class="text-[#64748b]">Nama:</span>
+                    <span class="font-semibold text-[#0f172a]">${pendingBooking.nama}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-[#64748b]">Jenis Kelamin:</span>
+                    <span class="font-semibold text-[#0f172a]">${pendingBooking.jenis_kelamin}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-[#64748b]">Kategori:</span>
+                    <span class="font-semibold text-[#0f172a]">${pendingBooking.kategori}</span>
+                </div>
+                ${pendingBooking.bawa_anak ? '<div class="flex justify-between"><span class="text-[#64748b]">Bawa Anak:</span><span class="font-semibold text-[#f59e0b]">✓ Ya</span></div>' : ''}
+                <div class="flex justify-between">
+                    <span class="text-[#64748b]">Rute:</span>
+                    <span class="font-semibold text-[#0f172a]">${pendingBooking.rute}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Kapal:</span>
+                    <span class="font-semibold text-[#0f172a]">${pendingBooking.kapal}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Kursi:</span>
+                    <span class="font-semibold text-[#0f172a]">${pendingBooking.kursi}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Tanggal:</span>
+                    <span class="font-semibold text-[#0f172a]">${pendingBooking.tanggal}</span>
+                </div>
+            `;
+            
+            const paymentTotal = document.getElementById('payment-total');
+            paymentTotal.textContent = 'Rp ' + pendingBooking.harga.toLocaleString('id-ID');
+        }
+        
+        // Payment method selection (CRITICAL FIX HERE)
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.payment-method-btn');
+            if (btn) {
+                selectedPaymentMethod = btn.dataset.method;
+                
+                // 1. Update UI for selection
+                document.querySelectorAll('.payment-method-btn').forEach(b => {
+                    b.classList.remove('border-[#0ea5e9]', 'bg-[#f0f9ff]');
+                    b.classList.add('border-[#e2e8f0]');
+                });
+                btn.classList.remove('border-[#e2e8f0]');
+                btn.classList.add('border-[#0ea5e9]', 'bg-[#f0f9ff]');
+                
+                // 2. AKTIVASI TOMBOL KONFIRMASI
+                const whatsappBtn = document.getElementById('confirm-whatsapp-btn');
+                const emailBtn = document.getElementById('send-email-btn');
+                
+                // Memastikan tombol aktif secara visual dan fungsional
+                if (whatsappBtn) {
+                    whatsappBtn.disabled = false;
+                }
+                if (emailBtn) {
+                    emailBtn.disabled = false;
+                }
+
+                // Memberikan feedback visual bahwa tombol sudah aktif
+                document.getElementById('payment-message').textContent = 'Metode pembayaran dipilih. Silakan klik Konfirmasi untuk mengirim rincian.';
+                document.getElementById('payment-message').className = 'text-xs text-center text-[#1d4ed8] font-semibold';
+            }
+        });
+        
+        // Confirm via WhatsApp (MENYIMPAN DATA DAN MEMBUKA WA)
+        document.getElementById('confirm-whatsapp-btn').addEventListener('click', async function() {
+            // Double check disabled status
+            if (this.disabled || !selectedPaymentMethod || !pendingBooking) {
+                document.getElementById('payment-message').textContent = 'Pilih metode pembayaran terlebih dahulu.';
+                document.getElementById('payment-message').className = 'text-xs text-center text-red-600 font-semibold';
+                return;
+            }
+            
+            const messageEl = document.getElementById('payment-message');
+            
+            messageEl.textContent = 'Menyimpan pesanan dan menyiapkan WhatsApp...';
+            messageEl.className = 'text-xs text-center text-[#f59e0b] font-semibold';
+            
+            // Simpan data ke Data SDK (Riwayat Akun)
+            let result = { isOk: false };
+            if (window.dataSdk) {
+                pendingBooking.metode_pembayaran = selectedPaymentMethod; 
+                result = await window.dataSdk.create(pendingBooking);
+            }
+            
+            if (result.isOk) {
+                const paymentMethodNames = {
+                    'gopay': 'GoPay', 'ovo': 'OVO', 'dana': 'DANA', 'shopeepay': 'ShopeePay',
+                    'bca': 'Transfer Bank BCA', 'mandiri': 'Transfer Bank Mandiri', 'bni': 'Transfer Bank BNI', 'bri': 'Transfer Bank BRI',
+                    'va-bca': 'Virtual Account BCA', 'va-mandiri': 'Virtual Account Mandiri'
+                };
+                
+                // Membuat pesan WA dengan detail lengkap
+                const message = `*KONFIRMASI BOOKING TIKET KAPAL*%0A%0A📋 Detail Pemesanan:%0A*Nama:* ${pendingBooking.nama}%0A*Email:* ${pendingBooking.email}%0A*Telepon:* ${pendingBooking.telepon}%0A*Jenis Kelamin:* ${pendingBooking.jenis_kelamin}%0A*Kategori:* ${pendingBooking.kategori}${pendingBooking.bawa_anak ? '%0A*Bawa Anak:* Ya (di bawah 2 tahun)' : ''}%0A%0A🚢 Detail Perjalanan:%0A*Rute:* ${pendingBooking.rute}%0A*Kapal:* ${pendingBooking.kapal}%0A*Kursi:* ${pendingBooking.kursi}%0A*Tanggal:* ${pendingBooking.tanggal}%0A%0A💳 Pembayaran:%0A*Metode:* ${paymentMethodNames[selectedPaymentMethod]}%0A*Total:* Rp ${pendingBooking.harga.toLocaleString('id-ID')}%0A%0AMohon konfirmasi pembayaran saya. Terima kasih!`;
+                
+                // BUKA LINK WA
+                const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+                
+                messageEl.textContent = '✓ Booking tersimpan! WhatsApp terbuka untuk konfirmasi. Mengalihkan ke Akun...';
+                messageEl.className = 'text-xs text-center text-green-600 font-semibold';
+                
+                // Pengalihan otomatis
+                setTimeout(() => {
+                    resetBooking();
+                    switchView('account-view'); 
+                }, 2000);
+            } else {
+                messageEl.textContent = '❌ Gagal menyimpan pesanan. Periksa F12 Console. Mengalihkan ke Akun...';
+                messageEl.className = 'text-xs text-center text-red-600';
+                 setTimeout(() => {
+                    resetBooking();
+                    switchView('account-view'); 
+                }, 2000);
+            }
+        });
+        
+        // Confirm via Email (MENYIMPAN DATA DAN MEMBUKA DRAFT EMAIL)
+        document.getElementById('send-email-btn').addEventListener('click', async function() {
+            if (this.disabled || !selectedPaymentMethod || !pendingBooking) {
+                document.getElementById('payment-message').textContent = 'Pilih metode pembayaran terlebih dahulu.';
+                document.getElementById('payment-message').className = 'text-xs text-center text-red-600 font-semibold';
+                return;
+            }
+
+            const messageEl = document.getElementById('payment-message');
+            
+            messageEl.textContent = 'Menyimpan pesanan dan menyiapkan Email...';
+            messageEl.className = 'text-xs text-center text-[#f59e0b] font-semibold';
+
+            // Simpan data ke Data SDK (Riwayat Akun)
+            let result = { isOk: false };
+            if (window.dataSdk) {
+                pendingBooking.metode_pembayaran = selectedPaymentMethod; 
+                result = await window.dataSdk.create(pendingBooking);
+            }
+                
+            if (result.isOk) {
+                const paymentMethodNames = {
+                    'gopay': 'GoPay', 'ovo': 'OVO', 'dana': 'DANA', 'shopeepay': 'ShopeePay',
+                    'bca': 'Transfer Bank BCA', 'mandiri': 'Transfer Bank Mandiri', 'bni': 'Transfer Bank BNI', 'bri': 'Transfer Bank BRI',
+                    'va-bca': 'Virtual Account BCA', 'va-mandiri': 'Virtual Account Mandiri'
+                };
+                
+                const bookingId = result.data?.id || 'N/A';
+
+                // MEMBUAT ISI PESAN EMAIL (untuk Pengguna & Admin)
+                const emailContent = `Halo ${pendingBooking.nama},%0A%0APemesanan tiket Anda telah *berhasil disimpan*. Berikut rinciannya:%0A%0A--- DETAIL PESANAN ---%0A*ID:* ${bookingId}%0A*Rute:* ${pendingBooking.rute}%0A*Tanggal:* ${pendingBooking.tanggal}%0A*Kursi:* ${pendingBooking.kursi}%0A*Total Pembayaran:* Rp ${pendingBooking.harga.toLocaleString('id-ID')}%0A*Metode:* ${paymentMethodNames[selectedPaymentMethod]}%0A%0A------------------------------------%0A%0ASilakan lanjutkan proses pembayaran ke rekening/e-wallet yang Anda pilih. Detail ini juga tersimpan di Riwayat Akun Anda.%0A%0ATerima kasih!`;
+
+                const userSubject = `Konfirmasi Pemesanan Tiket Kapal - ID Booking: ${bookingId}`;
+                const adminSubject = `NOTIFIKASI BOOKING BARU: ${pendingBooking.rute} (${pendingBooking.nama})`;
+                
+                // BUKA DUA DRAFT EMAIL: 1) Untuk Pengguna, 2) Untuk Admin
+                
+                // 1. DRAFT EMAIL KE PENGGUNA (Konfirmasi Pembelian)
+                const userMailtoUrl = `mailto:${pendingBooking.email}?subject=${encodeURIComponent(userSubject)}&body=${emailContent}`;
+                window.open(userMailtoUrl, '_blank', 'noopener,noreferrer');
+
+                // 2. DRAFT EMAIL KE ADMIN (Notifikasi Masuk)
+                const adminMailtoUrl = `mailto:${ADMIN_EMAIL_RECEIVER}?subject=${encodeURIComponent(adminSubject)}&body=${emailContent}%0A%0A--- [NOTIFIKASI ADMIN] ---`;
+                window.open(adminMailtoUrl, '_blank', 'noopener,noreferrer');
+                
+                messageEl.textContent = '✓ Pesanan berhasil disimpan! Silakan cek email Anda & kirim konfirmasi. Mengalihkan ke Akun...';
+                messageEl.className = 'text-xs text-center text-green-600 font-semibold';
+                
+                // Pengalihan otomatis
+                setTimeout(() => {
+                    resetBooking();
+                    switchView('account-view');
+                }, 2000);
+            } else {
+                messageEl.textContent = '❌ Gagal menyimpan pesanan. Periksa F12 Console. Mengalihkan ke Akun...';
+                messageEl.className = 'text-xs text-center text-red-600';
+                 setTimeout(() => {
+                    resetBooking();
+                    switchView('account-view');
+                }, 2000);
+            }
+        });
+
+
+        // --- Initialization ---
+
+        // Fungsi untuk mendapatkan tanggal hari ini dalam format YYYY-MM-DD
+        function getTodayDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Fungsi untuk membatasi input tanggal (2025/2026)
+        function setupDateInput() {
+             const dateInput = document.getElementById('tanggal');
+             if (dateInput) {
+                // Set tanggal minimum hari ini
+                dateInput.setAttribute('min', getTodayDate());
+                // Set tanggal maksimum hingga 31 Des 2026
+                dateInput.setAttribute('max', '2026-12-31'); 
+             }
+        }
+
+        // FUNGSI TOGGLE DARK MODE
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark');
+            const toggleBtn = document.getElementById('theme-toggle-btn');
+            
+            if (isDark) {
+                localStorage.setItem('theme', 'dark');
+                if (toggleBtn) toggleBtn.innerHTML = '🌙 Mode Gelap';
+            } else {
+                localStorage.setItem('theme', 'light');
+                if (toggleBtn) toggleBtn.innerHTML = '☀️ Mode Terang';
+            }
+        }
+
+        // Initialize navigation and event listeners
+        function initNavigation() {
+            // Load theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark');
+                const toggleBtn = document.getElementById('theme-toggle-btn');
+                if (toggleBtn) toggleBtn.innerHTML = '🌙 Mode Gelap';
+            }
+
+            // Event listener untuk toggle theme
+            document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+            
+            // Header navigation buttons
+            document.getElementById('nav-home-btn').addEventListener('click', () => {
+                resetBooking(); 
+                switchView('booking-view');
+            });
+            document.getElementById('nav-promo-btn').addEventListener('click', () => switchView('promo-view'));
+            document.getElementById('nav-account-btn').addEventListener('click', () => switchView('account-view'));
+            
+            // Internal navigation buttons
+            document.getElementById('back-to-booking-btn').addEventListener('click', () => switchView('booking-view'));
+            document.getElementById('goto-booking-btn-account').addEventListener('click', () => switchView('booking-view'));
+            
+            // Deck tab click handlers
+            document.querySelectorAll('.deck-tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const deckNum = parseInt(this.dataset.deck);
+                    switchDeck(deckNum);
+                });
+            });
+            
+            // Set initial view
+            switchView('booking-view');
+            // Ensure first deck is shown initially
+            switchDeck(1);
+            
+            // Set up input tanggal
+            setupDateInput();
+
+            // Atur tombol konfirmasi ke disabled secara default
+            const whatsappBtn = document.getElementById('confirm-whatsapp-btn');
+            const emailBtn = document.getElementById('send-email-btn');
+            if(whatsappBtn) whatsappBtn.disabled = true;
+            if(emailBtn) emailBtn.disabled = true;
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRoutes();
+            initDataSdk();
+            initNavigation();
+        });
+    </script>
+</body>
+</html>
